@@ -204,6 +204,18 @@ class RowMatrixOperations {
    */
   static auto Add(const RowMatrix<T> *matrixA, const RowMatrix<T> *matrixB) -> std::unique_ptr<RowMatrix<T>> {
     // TODO(P0): Add implementation
+    // int i, j;
+    // RowMatrix<T> *ptr = nullptr;
+    // if (matrixA->cols_ != matrixB->col_ || matrixA->rows_ != matrixB->rows_) {
+    //   return std::unique_ptr<RowMatrix<T>>(ptr);
+    // }
+    // ptr = new RowMatrix<T>(matrixA->rows_, matrixA->cols);
+    // for (i = 0; i < matrixA->cols_; i++) {
+    //   for (j = 0; j < matrixA->rows_; j++) {
+    //     // ptr->
+    //   }
+    // }
+    // return std::unique_ptr<RowMatrix<T>>(ptr);
     return std::unique_ptr<RowMatrix<T>>(nullptr);
   }
 
