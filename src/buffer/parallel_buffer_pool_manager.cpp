@@ -16,8 +16,7 @@ namespace bustub {
 
 ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_t pool_size, DiskManager *disk_manager,
                                                      LogManager *log_manager)
-    : pool_size_(pool_size),
-      num_instances_(num_instances) {
+    : pool_size_(pool_size), num_instances_(num_instances) {
   // Allocate and create individual BufferPoolManagerInstances
   size_t i;
   for (i = 0; i < num_instances; i++) {
@@ -31,11 +30,11 @@ ParallelBufferPoolManager::~ParallelBufferPoolManager() {
   for (i = 0; i < num_instances_; i++) {
     delete instances_[i];
   }
-};
+}
 
 auto ParallelBufferPoolManager::GetPoolSize() -> size_t {
   // Get size of all BufferPoolManagerInstances
-  return pool_size_;
+  return instances_.size() * pool_size_;
 }
 
 auto ParallelBufferPoolManager::GetBufferPoolManager(page_id_t page_id) -> BufferPoolManager * {
@@ -68,10 +67,10 @@ auto ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) -> Page * {
   size_t i;
   size_t index;
   Page *p_page = nullptr;
-  for (i = start_index; i < start_index + num_instances_; i++) {
+  for (i = start_index_; i < start_index_ + num_instances_; i++) {
     index = i % num_instances_;
     if ((p_page = instances_[index]->NewPage(page_id)) != nullptr) {
-      start_index = (i + 1) % num_instances_;
+      start_index_ = (i + 1) % num_instances_;
       return p_page;
     }
   }

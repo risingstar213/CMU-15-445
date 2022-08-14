@@ -101,6 +101,8 @@ class HashTableBucketPage {
    */
   void SetOccupied(uint32_t bucket_idx);
 
+  void SetUnoccupied(uint32_t bucket_idx);
+
   /**
    * Returns whether or not an index is readable (valid key/value pair)
    *
@@ -116,6 +118,8 @@ class HashTableBucketPage {
    * @param bucket_idx the index to update
    */
   void SetReadable(uint32_t bucket_idx);
+
+  void SetUnreadable(uint32_t bucket_idx);
 
   /**
    * @return the number of readable elements, i.e. current size
@@ -137,12 +141,18 @@ class HashTableBucketPage {
    */
   void PrintBucket();
 
+  MappingType *GetArrayCopy();
+
+  void Clear();
+
  private:
   //  For more on BUCKET_ARRAY_SIZE see storage/page/hash_table_page_defs.h
   char occupied_[(BUCKET_ARRAY_SIZE - 1) / 8 + 1];
   // 0 if tombstone/brand new (never occupied), 1 otherwise.
   char readable_[(BUCKET_ARRAY_SIZE - 1) / 8 + 1];
-  MappingType array_[1];
+  MappingType array_[BUCKET_ARRAY_SIZE];
+  auto GetLocation(uint32_t bucket_idx) const -> uint32_t;
+  auto GetMask(uint32_t bucket_idx) const -> char;
 };
 
 }  // namespace bustub

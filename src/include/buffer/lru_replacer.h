@@ -13,11 +13,10 @@
 #pragma once
 
 #include <list>
-#include <mutex>  // NOLINT
-#include <vector>
-#include <unordered_map>
 #include <memory>
-#include <mutex>
+#include <mutex>  // NOLINT
+#include <unordered_map>
+#include <vector>
 
 #include "buffer/replacer.h"
 #include "common/config.h"
@@ -31,7 +30,7 @@ class LRUReplacer : public Replacer {
  public:
   /**
    * Create a new LRUReplacer.
-   * @param num_pages the maximum number of pages the LRUReplacer will be required to store
+   * @param num_page_ the maximum number of pages the LRUReplacer will be required to store
    */
   explicit LRUReplacer(size_t num_pages);
 
@@ -51,18 +50,18 @@ class LRUReplacer : public Replacer {
  private:
   // TODO(student): implement me!
   struct Node {
-    frame_id_t frame;
-    Node *prev = nullptr;
-    std::unique_ptr<Node> next;
+    frame_id_t frame_;
+    Node *prev_ = nullptr;
+    std::unique_ptr<Node> next_;
     Node() = default;
-    explicit Node(frame_id_t frame, Node *prev) : frame(frame), prev(prev) {}
+    explicit Node(frame_id_t frame, Node *prev) : frame_(frame), prev_(prev) {}
   };
-  std::mutex mutex;
-  size_t num_pages;
-  size_t size;
-  std::unique_ptr<Node> fst;
-  Node *lst;
-  std::unordered_map<frame_id_t, Node *> hashMap;
+  std::mutex mutex_;
+  size_t num_page_;
+  size_t size_;
+  std::unique_ptr<Node> fst_;
+  Node *lst_;
+  std::unordered_map<frame_id_t, Node *> hash_map_;
 };
 
 }  // namespace bustub
