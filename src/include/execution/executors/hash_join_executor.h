@@ -13,12 +13,42 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
+#include "common/util/hash_util.h"
 #include "execution/executor_context.h"
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/hash_join_plan.h"
 #include "storage/table/tuple.h"
+
+namespace bustub {
+
+struct HashJoinKey {
+  Value key_;
+
+  auto operator==(const HashJoinKey &other) const -> bool {
+    bool is_equal = true;
+    if (key_.CompareEquals(other.key_) != CmpBool::CmpTrue) {
+      is_equal = false;
+    }
+    return is_equal;
+  }
+};
+
+}  // namespace bustub
+
+namespace std {
+
+template <>
+struct hash<bustub::HashJoinKey> {
+  auto operator()(const bustub::HashJoinKey &hash_key) const -> std::size_t {
+    return bustub::HashUtil::HashValue(&hash_key.key_);
+  }
+};
+
+}  // namespace std
 
 namespace bustub {
 
@@ -54,6 +84,12 @@ class HashJoinExecutor : public AbstractExecutor {
  private:
   /** The NestedLoopJoin plan node to be executed. */
   const HashJoinPlanNode *plan_;
+  std::unique_ptr<AbstractExecutor> left_executor_;
+  std::unique_ptr<AbstractExecutor> right_executor_;
+  std::unordered_map<HashJoinKey, std::vector<std::vector<Value> > > hash_map_;
+  uint32_t left_idx_;
+  std::vector<std::vector<Value> > left_vectors_;
+  std::vector<Value> right_vector_;
 };
 
 }  // namespace bustub
