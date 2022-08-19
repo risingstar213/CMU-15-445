@@ -14,9 +14,11 @@
 
 #include <algorithm>
 #include <condition_variable>  // NOLINT
+#include <fstream>
 #include <list>
 #include <memory>
 #include <mutex>  // NOLINT
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -76,7 +78,7 @@ class LockManager {
    * @param rid the RID to be locked in shared mode
    * @return true if the lock is granted, false otherwise
    */
-  auto LockShared(Transaction *txn, const RID &rid) -> bool;
+  bool LockShared(Transaction *txn, const RID &rid);
 
   /**
    * Acquire a lock on RID in exclusive mode. See [LOCK_NOTE] in header file.
@@ -84,7 +86,7 @@ class LockManager {
    * @param rid the RID to be locked in exclusive mode
    * @return true if the lock is granted, false otherwise
    */
-  auto LockExclusive(Transaction *txn, const RID &rid) -> bool;
+  bool LockExclusive(Transaction *txn, const RID &rid);
 
   /**
    * Upgrade a lock from a shared lock to an exclusive lock.
@@ -93,7 +95,7 @@ class LockManager {
    * requesting transaction
    * @return true if the upgrade is successful, false otherwise
    */
-  auto LockUpgrade(Transaction *txn, const RID &rid) -> bool;
+  bool LockUpgrade(Transaction *txn, const RID &rid);
 
   /**
    * Release the lock held by the transaction.
@@ -102,13 +104,16 @@ class LockManager {
    * @param rid the RID that is locked by the transaction
    * @return true if the unlock is successful, false otherwise
    */
-  auto Unlock(Transaction *txn, const RID &rid) -> bool;
+  bool Unlock(Transaction *txn, const RID &rid);
 
  private:
   std::mutex latch_;
 
   /** Lock table for lock requests. */
   std::unordered_map<RID, LockRequestQueue> lock_table_;
+  bool NeedWait(LockRequest self, Transaction *txn, LockRequestQueue *lock_queue);
+  bool NeedWaitUpdate(Transaction *txn, LockRequestQueue *lock_queue);
+  bool CheckAbort(Transaction *txn);
 };
 
 }  // namespace bustub

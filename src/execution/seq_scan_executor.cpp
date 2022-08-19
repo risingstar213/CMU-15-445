@@ -35,11 +35,26 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     *tuple = *iter_;
     *rid = iter_->GetRid();
 
+    LockManager *lock_mgr = GetExecutorContext()->GetLockManager();
+    Transaction *txn = GetExecutorContext()->GetTransaction();
+    if (txn->GetIsolationLevel() != IsolationLevel::READ_UNCOMMITTED) {
+      if (!lock_mgr->LockShared(txn, *rid)) {
+        throw TransactionAbortException(txn->GetTransactionId(), AbortReason::DEADLOCK);
+      }
+    }
+
     std::vector<Value> values;
     for (i = 0; i < plan_->OutputSchema()->GetColumnCount(); i++) {
       values.emplace_back(plan_->OutputSchema()->GetColumn(i).GetExpr()->Evaluate(tuple, schema_));
     }
     *tuple = Tuple(values, plan_->OutputSchema());
+
+    if (txn->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {
+      if (!lock_mgr->Unlock(txn, *rid)) {
+        throw TransactionAbortException(txn->GetTransactionId(), AbortReason::DEADLOCK);
+      }
+    }
+
     iter_++;
     auto predicate = plan_->GetPredicate();
     if (predicate != nullptr && !predicate->Evaluate(tuple, plan_->OutputSchema()).GetAs<bool>()) {

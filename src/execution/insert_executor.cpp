@@ -48,10 +48,30 @@ auto InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
     return false;
   }
 
+  Transaction *txn = GetExecutorContext()->GetTransaction();
+  LockManager *lock_mgr = GetExecutorContext()->GetLockManager();
+
+  if (txn->IsSharedLocked(*rid)) {
+    if (!lock_mgr->LockUpgrade(txn, *rid)) {
+      throw TransactionAbortException(txn->GetTransactionId(), AbortReason::DEADLOCK);
+    }
+  } else {
+    if (!lock_mgr->LockExclusive(txn, *rid)) {
+      throw TransactionAbortException(txn->GetTransactionId(), AbortReason::DEADLOCK);
+    }
+  }
+
   for (auto &index : catalog_->GetTableIndexes(table_info_->name_)) {
     auto key = tuple->KeyFromTuple(table_info_->schema_, *index->index_->GetKeySchema(), index->index_->GetKeyAttrs());
     index->index_->InsertEntry(key, *rid, exec_ctx_->GetTransaction());
   }
+
+  if (txn->GetIsolationLevel() != IsolationLevel::REPEATABLE_READ) {
+    if (!lock_mgr->Unlock(txn, *rid)) {
+      throw TransactionAbortException(txn->GetTransactionId(), AbortReason::DEADLOCK);
+    }
+  }
+
   return Next(tuple, rid);
 }
 
